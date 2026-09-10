@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1920" height="1080" viewBox="0 0 1920 1080">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#fff8f6;stop-opacity:1" />
+      <stop offset="50%" style="stop-color:#ffeae0;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#ffdbcb;stop-opacity:1" />
+    </linearGradient>
+    <radialGradient id="glow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" style="stop-color:#9c4328;stop-opacity:0.15" />
+      <stop offset="70%" style="stop-color:#4e6451;stop-opacity:0.05" />
+      <stop offset="100%" style="stop-color:#fff8f6;stop-opacity:0" />
+    </radialGradient>
+  </defs>
+  <rect width="1920" height="1080" fill="url(#bg)" />
+  <ellipse cx="960" cy="540" rx="800" ry="400" fill="url(#glow)" />
+  <text x="960" y="500" font-family="Georgia, serif" font-size="48" font-weight="600" fill="#2b160b" text-anchor="middle" opacity="0.15">☕</text>
+  <text x="960" y="560" font-family="Georgia, serif" font-size="24" fill="#9c4328" text-anchor="middle" opacity="0.2">KHAAS CHAI</text>
+</svg>

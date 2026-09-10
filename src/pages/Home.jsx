@@ -1,5 +1,6 @@
 import { NavLink } from 'react-router-dom';
 import { SectionContainer, Divider, Card, Badge, IconBadge, Button, ImageWithFallback } from '../components/UI';
+import VideoBackground from '../components/VideoBackground';
 
 const householdRituals = [
   {
@@ -156,10 +157,11 @@ export default function Home() {
         <SectionContainer variant="hero">
           <div className="relative w-full rounded-xl overflow-hidden shadow-[0_12px_32px_-8px_rgba(59,36,24,0.12)] bg-surface-container-low">
             <div className="relative w-full aspect-[4/3] overflow-hidden">
-              <ImageWithFallback
-                src="https://lh3.googleusercontent.com/aida-public/AB6AXuD1P6T1sl3khEDcprtsdpZTFu7l1bRXH-cR9ABduByer_c_dScrwu6cwfB5O-DRIJ4xjmKkjCTQZyQ-3xSlsfzJ4mDNwaa1xcNxeHqpU2MAGwFJARQ9WHPwbYmSF_O_xd9_2N6SmIvwM2ZnCCXVagIORub9_OvB2IoQp7Ccc0QMgwCJqL_dkHCVXEylc_6KESivxI0RncmjpKp6YIUGwwN6Am21xSeAb9k-TinP7UE5Yf57aWFmhARt6Q"
-                alt="Elderly Pakistani grandmother smiling warmly beside rustic clay kulhad teacups steaming with spiced chai and golden almond biscuits on an embroidered dawat table"
-                className="w-full h-full object-cover object-center"
+              <VideoBackground
+                desktopSrc="/videos/khaas-chai-bg-desktop.mp4"
+                mobileSrc="/videos/khaas-chai-bg-mobile.mp4"
+                posterSrc="/videos/khaas-chai-bg-poster.jpg"
+                fallbackClassName="bg-surface-container-low"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-on-surface via-on-surface/40 to-transparent opacity-90"></div>
               <div className="absolute top-space-sm left-space-sm right-space-sm flex items-center justify-between">
