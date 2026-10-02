@@ -1,5 +1,6 @@
 // Orders Controller
 import { supabaseService } from '../services/supabaseService.js';
+import { supabaseAdmin } from '../config/supabase.js';
 
 // Configurable delivery fee rules (server-side, never trust client)
 const DELIVERY_FEE = parseFloat(process.env.DELIVERY_FEE) || 120;
@@ -28,7 +29,7 @@ export const ordersController = {
       let subtotal = 0;
 
       for (const item of orderData.items) {
-        const { data: product, error } = await supabaseService.supabaseAdmin
+        const { data: product, error } = await supabaseAdmin
           .from('products')
           .select('id, name, price, stock_quantity, is_active')
           .eq('id', item.product_id)
@@ -88,6 +89,9 @@ export const ordersController = {
       const result = await supabaseService.placeOrder(userId, {
         items: orderItems,
         total_amount: totalAmount,
+        subtotal,
+        delivery_fee: deliveryFee,
+        packaging_fee: packagingFee,
         shipping_address: orderData.shipping_address,
         payment_method: orderData.payment_method,
         special_notes: orderData.special_notes,
@@ -101,6 +105,7 @@ export const ordersController = {
         message: 'Order placed successfully',
         data: {
           ...result,
+          order_id: result?.id,
           breakdown: {
             subtotal,
             delivery_fee: deliveryFee,
