@@ -6,8 +6,6 @@ export const orderCreateSchema = z.object({
     items: z.array(z.object({
       product_id: z.string().uuid(),
       quantity: z.number().int().positive(),
-      price: z.number().positive(),
-      name: z.string()
     })).min(1, 'At least one item is required'),
     shipping_address: z.object({
       name: z.string().min(1),
@@ -22,10 +20,6 @@ export const orderCreateSchema = z.object({
     customer_name: z.string().min(1).optional(),
     customer_email: z.string().email().optional(),
     customer_phone: z.string().min(1).optional(),
-    // Client-supplied totals are NEVER trusted; these are only used for display hints
-    client_subtotal: z.number().optional(),
-    client_delivery_fee: z.number().optional(),
-    client_packaging_fee: z.number().optional()
   })
 });
 
