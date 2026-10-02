@@ -111,8 +111,22 @@ export const supabaseService = {
   },
   // Orders - GUEST ORDER SUPPORT
   async placeOrder(userId, orderData) {
-    const { data, error } = await supabaseAdmin.rpc('place_order', { p_user_id: userId, p_items: orderData.items, p_total_amount: orderData.total_amount, p_shipping_address: orderData.shipping_address, p_payment_method: orderData.payment_method, p_special_notes: orderData.special_notes, p_customer_name: orderData.customer_name || null, p_customer_email: orderData.customer_email || null, p_customer_phone: orderData.customer_phone || null });
-    if (error) throw error; return data;
+    const { data, error } = await supabaseAdmin.rpc('place_order', {
+      p_user_id: userId,
+      p_items: orderData.items,
+      p_total_amount: orderData.total_amount,
+      p_subtotal: orderData.subtotal,
+      p_delivery_fee: orderData.delivery_fee,
+      p_packaging_fee: orderData.packaging_fee,
+      p_shipping_address: orderData.shipping_address,
+      p_payment_method: orderData.payment_method,
+      p_special_notes: orderData.special_notes || null,
+      p_customer_name: orderData.customer_name || null,
+      p_customer_email: orderData.customer_email || null,
+      p_customer_phone: orderData.customer_phone || null
+    });
+    if (error) throw error;
+    return data;
   },
 
   async getUserOrders(userId, filters = {}) {
