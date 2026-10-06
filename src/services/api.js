@@ -100,30 +100,31 @@ export const cartApi = {
 };
 
 // Orders API
+const PRODUCTION_ORDER_FUNCTION = 'https://pmuedkckogxbqppmrbzp.supabase.co/functions/v1/place-order';
+
 export const ordersApi = {
   place: async (data) => {
-    if (!API_BASE_URL) {
-      const { data: rpcData, error } = await supabase.rpc('place_order', {
-        p_user_id: data.user_id || null,
-        p_items: data.items,
-        p_total_amount: data.total_amount,
-        p_shipping_address: data.shipping_address,
-        p_payment_method: data.payment_method,
-        p_special_notes: data.special_notes || null,
-        p_customer_name: data.customer_name || null,
-        p_customer_email: data.customer_email || null,
-        p_customer_phone: data.customer_phone || null,
-        p_subtotal: data.subtotal,
-        p_delivery_fee: data.delivery_fee || 0,
-        p_packaging_fee: data.packaging_fee || 0
+    if (!API_BASE_URL || import.meta.env.PROD) {
+      const response = await fetch(PRODUCTION_ORDER_FUNCTION, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'place', ...data })
       });
-      if (error) throw new Error(error.message || 'Order could not be placed.');
-      return { success: true, message: 'Order placed successfully', data: { ...rpcData, order_id: rpcData?.id } };
+
+      let payload = null;
+      try { payload = await response.json(); } catch {}
+
+      if (!response.ok || payload?.success === false) {
+        throw new Error(payload?.message || `Order request failed (HTTP ${response.status})`);
+      }
+
+      return payload;
     }
     return api.post('/orders', data).then(handleResponse);
   },
+
   track: async (trackingToken) => {
-    if (!API_BASE_URL) {
+    if (!API_BASE_URL || import.meta.env.PROD) {
       const { data: rpcData, error } = await supabase.rpc('track_order_by_token', {
         p_tracking_token: trackingToken
       });
@@ -132,10 +133,10 @@ export const ordersApi = {
     }
     return api.get(`/orders/track/${encodeURIComponent(trackingToken)}`).then(handleResponse);
   },
+
   getMyOrders: (params = {}) => api.get('/orders/my', { params }).then(handleResponse),
   get: (id) => api.get(`/orders/${id}`).then(handleResponse),
   cancel: (id) => api.patch(`/orders/${id}/cancel`).then(handleResponse),
-  // Admin
   listAll: (params = {}) => api.get('/orders', { params }).then(handleResponse),
   updateStatus: (id, data) => api.patch(`/orders/${id}/status`, data).then(handleResponse),
 };
