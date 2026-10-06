@@ -123,7 +123,36 @@ export const ordersController = {
     }
   },
 
-  async trackOrder(req, res, next) {
+  async paymentWebhook(req, res, next) {
+    try {
+      const expected = process.env.PAYMENT_WEBHOOK_SECRET;
+      const provided = req.headers['x-payment-webhook-secret'];
+      if (!expected || !provided || provided !== expected) {
+        return res.status(401).json({ success: false, message: 'Invalid payment webhook secret' });
+      }
+
+      const { order_id, payment_status, provider_reference } = req.body;
+      if (!order_id || payment_status !== 'paid') {
+        return res.status(400).json({ success: false, message: 'order_id and payment_status=paid are required' });
+      }
+
+      const { data: previous, error: previousError } = await supabaseAdmin.from('orders').select('*').eq('id', order_id).single();
+      if (previousError || !previous) return res.status(404).json({ success: false, message: 'Order not found' });
+
+      const { data, error } = await supabaseAdmin.from('orders')
+        .update({ payment_status: 'paid', payment_provider_reference: provider_reference || null, payment_updated_at: new Date().toISOString() })
+        .eq('id', order_id).select('*').single();
+      if (error) throw error;
+
+      if (previous.payment_status !== 'paid') {
+        try { await sendPaymentSuccess(data); } catch (emailError) { console.error('[payment-email] failed:', emailError.message); }
+      }
+
+      res.json({ success: true, message: 'Payment marked successful', data: { id: data.id, payment_status: data.payment_status } });
+    } catch (err) { next(err); }
+  },
+
+
     try {
       const { token } = req.params;
       const { data, error } = await supabaseAdmin
