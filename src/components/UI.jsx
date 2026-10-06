@@ -229,6 +229,8 @@ export const ImageWithFallback = ({
     <img
       src={hasError ? fallback : imageSrc}
       alt={alt}
+      loading={props.loading ?? 'lazy'}
+      decoding="async"
       className={className}
       onError={() => setHasError(true)}
       {...props}
