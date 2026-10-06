@@ -19,6 +19,7 @@ export default function OrderTracking({ token }) {
     if (!trackingToken) { setError('Tracking link is missing.'); return; }
 
     let channel;
+    let pollTimer;
     let active = true;
 
     const load = async () => {
@@ -29,6 +30,13 @@ export default function OrderTracking({ token }) {
         if (active) setError(e?.response?.data?.message || e.message || 'Unable to load tracking.');
         return;
       }
+
+      pollTimer = setInterval(async () => {
+        try {
+          const fresh = await ordersApi.track(trackingToken);
+          if (active) setOrder(fresh.data);
+        } catch { /* Realtime/polling errors are non-fatal */ }
+      }, 5000);
 
       channel = supabase.channel(`order-tracking-${trackingToken}`)
         .on('postgres_changes', {
@@ -44,6 +52,7 @@ export default function OrderTracking({ token }) {
     return () => {
       active = false;
       if (channel) supabase.removeChannel(channel);
+      if (pollTimer) clearInterval(pollTimer);
     };
   }, [token]);
 
