@@ -154,7 +154,7 @@ const lawaazmaat = [
   {
     name: 'Crisp Samosa & Chutney',
     description: 'Spiced potato & crushed cumin',
-    price: '₨ 160',
+    price: '₨ 220',
     image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuDO201QX_25YS5B1jU2Rj-1EiUAnwwkaInevzWf2iDY8v0deHd9Adc0fcqR5XUDjfzghrl4MvxIJAMKCyN6gfNdYn2xysxd8mDksqFB61qcxUMDJjYOm9TCHhjtDgCsTa81Q_lhs65vBzSNQXMsa4ChWejEXLLDOSB8R6CgEMkuaQApGkQolRMm9nD_dpWHTYRZB20JrQLzv6P5zNWTP88WeQTl3jg64LhGgNa04lbuScSW6aRtLPVy8g',
   },
   {
@@ -166,7 +166,7 @@ const lawaazmaat = [
 ];
 
 export default function Home() {
-  const [addedId, setAddedId] = useState(null);
+  const [addedIds, setAddedIds] = useState(() => new Set());
   const [trayMessage, setTrayMessage] = useState('');
 
   const handleAddToTray = (key) => {
@@ -177,13 +177,24 @@ export default function Home() {
     }
     const product = [...signatureBrews, ...lawaazmaat].find(item => item.name === key);
     addToTray({ productId, name: key, price: Number(String(product?.price || '0').replace(/[^0-9.]/g, '')) || 0 });
-    setAddedId(productId);
+    setAddedIds(prev => {
+      const next = new Set(prev);
+      next.add(productId);
+      return next;
+    });
     setTrayMessage(`${key} added to your tray`);
-    window.clearTimeout(window.__khaasTrayToastTimer);
-    window.__khaasTrayToastTimer = window.setTimeout(() => {
-      setAddedId(null);
+
+    window.__khaasTrayTimers = window.__khaasTrayTimers || {};
+    window.clearTimeout(window.__khaasTrayTimers[productId]);
+    window.__khaasTrayTimers[productId] = window.setTimeout(() => {
+      setAddedIds(prev => {
+        const next = new Set(prev);
+        next.delete(productId);
+        return next;
+      });
+      delete window.__khaasTrayTimers[productId];
       setTrayMessage('');
-    }, 1800);
+    }, 2200);
   };
 
   return (
@@ -194,9 +205,9 @@ export default function Home() {
           <div className="relative w-full rounded-xl overflow-hidden shadow-[0_12px_32px_-8px_rgba(59,36,24,0.12)] bg-surface-container-low">
             <div className="relative w-full aspect-[4/3] overflow-hidden">
               <VideoBackground
-                desktopSrc="/videos/khaas-chai-bg-desktop.mp4"
-                mobileSrc="/videos/khaas-chai-bg-mobile.mp4"
-                posterSrc="/videos/khaas-chai-bg-poster.jpg"
+                desktopSrc="https://www.pexels.com/download/video/5765897/"
+                mobileSrc="https://www.pexels.com/download/video/8296117/"
+                posterSrc="/videos/khaas-chai-bg-poster.svg"
                 fallbackClassName="bg-surface-container-low"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-on-surface via-on-surface/40 to-transparent opacity-90"></div>
@@ -309,9 +320,9 @@ export default function Home() {
                     <span className="material-symbols-outlined text-[15px]" style={{ color: brew.detailColor }}>{brew.detailIcon}</span>
                     <span>{brew.detail}</span>
                   </div>
-                  <Button variant="primary" size="sm" onClick={() => handleAddToTray(brew.name)} className={`transition-all ${addedId === HOME_PRODUCT_IDS[brew.name] ? 'scale-105' : ''}`}>
-                    <span className="material-symbols-outlined text-[15px]">{addedId === HOME_PRODUCT_IDS[brew.name] ? 'check_circle' : 'add'}</span>
-                    <span>{addedId === HOME_PRODUCT_IDS[brew.name] ? 'Added' : 'Add to Tray'}</span>
+                  <Button variant="primary" size="sm" onClick={() => handleAddToTray(brew.name)} className={`transition-all ${addedIds.has(HOME_PRODUCT_IDS[brew.name]) ? 'scale-105' : ''}`}>
+                    <span className="material-symbols-outlined text-[15px]">{addedIds.has(HOME_PRODUCT_IDS[brew.name]) ? 'check_circle' : 'add'}</span>
+                    <span>{addedIds.has(HOME_PRODUCT_IDS[brew.name]) ? 'Added' : 'Add to Tray'}</span>
                   </Button>
                 </div>
               </Card>
@@ -336,8 +347,8 @@ export default function Home() {
                 <span className="text-[12px] text-on-surface-variant">{item.description}</span>
                 <div className="flex items-center justify-between pt-1 mt-auto">
                   <span className="font-label-lg text-secondary font-bold text-[14px]">{item.price}</span>
-                  <Button variant="ghost" size="sm" className={`w-7 h-7 p-0 transition-all ${addedId === HOME_PRODUCT_IDS[item.name] ? 'bg-primary-fixed scale-110' : ''}`} onClick={() => handleAddToTray(item.name)}>
-                    <span className="material-symbols-outlined text-[16px]">{addedId === HOME_PRODUCT_IDS[item.name] ? 'check' : 'add'}</span>
+                  <Button variant="ghost" size="sm" className={`w-7 h-7 p-0 transition-all ${addedIds.has(HOME_PRODUCT_IDS[item.name]) ? 'bg-primary-fixed scale-110' : ''}`} onClick={() => handleAddToTray(item.name)}>
+                    <span className="material-symbols-outlined text-[16px]">{addedIds.has(HOME_PRODUCT_IDS[item.name]) ? 'check' : 'add'}</span>
                   </Button>
                 </div>
               </Card>
@@ -403,7 +414,7 @@ export default function Home() {
               <span className="material-symbols-outlined text-[18px]">check</span>
             </span>
             <span className="min-w-0 truncate">{trayMessage}</span>
-            <a href="/order" className="shrink-0 rounded-full bg-surface px-3 py-1.5 text-xs font-bold text-secondary">View Tray</a>
+            <a href="/order?tray=1" className="shrink-0 rounded-full bg-surface px-3 py-1.5 text-xs font-bold text-secondary transition-transform hover:scale-105 active:scale-95">View Tray</a>
           </div>
         </div>
       )}
