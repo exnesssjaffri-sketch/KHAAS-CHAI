@@ -9,16 +9,12 @@ export default function VideoBackground({
 }) {
   const [isMobile, setIsMobile] = useState(false);
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
-  const [useFallback, setUseFallback] = useState(true);
   const [videoSrc, setVideoSrc] = useState('');
   const [videoLoaded, setVideoLoaded] = useState(false);
   const videoRef = useRef(null);
 
   useEffect(() => {
-    const checkMobile = () => {
-      const mobile = window.innerWidth < 768;
-      setIsMobile(mobile);
-    };
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
 
     const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
     setPrefersReducedMotion(mediaQuery.matches);
@@ -37,71 +33,77 @@ export default function VideoBackground({
 
   useEffect(() => {
     if (prefersReducedMotion) {
-      setUseFallback(true);
       setVideoSrc('');
       return;
     }
 
     const src = isMobile ? (mobileSrc || desktopSrc) : desktopSrc;
-    if (src) {
-      setVideoSrc(src);
-      setUseFallback(false);
-    } else {
-      setUseFallback(true);
+    if (!src) {
+      setVideoSrc('');
+      return;
     }
+
+    let cancelled = false;
+    let timeoutId;
+
+    const startVideoLoad = () => {
+      if (!cancelled) {
+        setVideoLoaded(false);
+        setVideoSrc(src);
+      }
+    };
+
+    if ('requestIdleCallback' in window) {
+      const idleId = window.requestIdleCallback(startVideoLoad, { timeout: 1200 });
+      return () => {
+        cancelled = true;
+        window.cancelIdleCallback?.(idleId);
+      };
+    }
+
+    timeoutId = window.setTimeout(startVideoLoad, 500);
+    return () => {
+      cancelled = true;
+      window.clearTimeout(timeoutId);
+    };
   }, [isMobile, prefersReducedMotion, desktopSrc, mobileSrc]);
 
-  const handleVideoLoad = () => {
+  const handleVideoReady = () => {
     setVideoLoaded(true);
     videoRef.current?.play().catch(() => {
-      setUseFallback(true);
       setVideoSrc('');
+      setVideoLoaded(false);
     });
   };
+
   const handleVideoError = () => {
-    setUseFallback(true);
     setVideoSrc('');
+    setVideoLoaded(false);
   };
 
-  if (useFallback || !videoSrc) {
-    return (
-      <div
-        className={`relative w-full h-full ${fallbackClassName} ${className}`}
-        aria-hidden="true"
-        style={{
-          backgroundImage: `url(${posterSrc})`,
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
-        }}
-      />
-    );
-  }
-
   return (
-    <div className={`relative w-full h-full overflow-hidden ${className}`} aria-hidden="true">
-      <video
-        ref={videoRef}
-        src={videoSrc}
-        autoPlay
-        muted
-        playsInline
-        loop
-        preload="metadata"
-        onLoadedData={handleVideoLoad}
-        onError={handleVideoError}
-        className={`w-full h-full object-cover transition-opacity duration-500 ${
-          videoLoaded ? 'opacity-100' : 'opacity-0'
-        }`}
-        aria-hidden="true"
-      />
-      {!videoLoaded && (
-        <div
-          className={`absolute inset-0 ${fallbackClassName} transition-opacity duration-500`}
-          style={{
-            backgroundImage: `url(${posterSrc})`,
-            backgroundSize: 'cover',
-            backgroundPosition: 'center',
-          }}
+    <div
+      className={`relative w-full h-full overflow-hidden ${fallbackClassName} ${className}`}
+      aria-hidden="true"
+      style={{
+        backgroundImage: `url(${posterSrc})`,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+      }}
+    >
+      {videoSrc && (
+        <video
+          ref={videoRef}
+          src={videoSrc}
+          poster={posterSrc}
+          autoPlay
+          muted
+          playsInline
+          loop
+          preload="metadata"
+          onLoadedData={handleVideoReady}
+          onError={handleVideoError}
+          className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-700 ${videoLoaded ? 'opacity-100' : 'opacity-0'}`}
           aria-hidden="true"
         />
       )}
