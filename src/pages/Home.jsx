@@ -246,7 +246,7 @@ export default function Home() {
         <Divider />
 
         {/* Household Rituals Carousel */}
-        <SectionContainer>
+        <SectionContainer className="deferred-section">
           <div className="flex items-baseline justify-between mb-space-sm">
             <div>
               <span className="font-label-sm text-label-sm text-secondary uppercase tracking-widest font-semibold">Gharano Ke Rasm-o-Riwaj</span>
@@ -280,7 +280,7 @@ export default function Home() {
         </SectionContainer>
 
         {/* Signature Handcrafted Brews */}
-        <SectionContainer>
+        <SectionContainer className="deferred-section">
           <div className="flex flex-col gap-space-3xs mb-space-md">
             <div className="flex items-center gap-2">
               <span className="h-2 w-2 rounded-full bg-secondary"></span>
@@ -331,7 +331,7 @@ export default function Home() {
         </SectionContainer>
 
         {/* Lawaazmaat (Chai Companions) */}
-        <SectionContainer>
+        <SectionContainer className="deferred-section">
           <div className="flex flex-col gap-space-3xs mb-space-md">
             <span className="font-label-sm text-label-sm text-secondary uppercase tracking-widest font-semibold">Chai Ke Sath</span>
             <h2 className="font-headline-sm text-headline-sm text-on-surface">Lawaazmaat — The Chai Companions</h2>
@@ -357,7 +357,7 @@ export default function Home() {
         </SectionContainer>
 
         {/* Chai Dawat Box Prompt */}
-        <SectionContainer>
+        <SectionContainer className="deferred-section">
           <div className="bg-surface-container rounded-xl p-space-md shadow-[0_8px_24px_-6px_rgba(59,36,24,0.1)] flex flex-col gap-space-sm relative overflow-hidden">
             <div className="absolute -right-6 -bottom-6 w-36 h-36 rounded-full bg-secondary/10 pointer-events-none"></div>
             <div className="flex items-center justify-between">
@@ -387,7 +387,7 @@ export default function Home() {
         </SectionContainer>
 
         {/* The Host's Promise */}
-        <SectionContainer variant="hero" className="pb-space-xl">
+        <SectionContainer variant="hero" className="pb-space-xl deferred-section">
           <div className="p-space-lg rounded-xl bg-surface-container-low text-center flex flex-col items-center gap-space-sm shadow-[0_4px_20px_rgba(59,36,24,0.04)]">
             <div className="w-12 h-12 rounded-full bg-surface-variant text-secondary flex items-center justify-center shadow-inner">
               <span className="material-symbols-outlined text-[26px]">volunteer_activism</span>
