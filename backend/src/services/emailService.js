@@ -26,7 +26,7 @@ function escapeHtml(value) {
 
 export function trackingUrl(order) {
   const base = (process.env.FRONTEND_URL || 'http://localhost:5173').replace(/\/$/, '');
-  return `${base}/order?track=${encodeURIComponent(order.tracking_token)}`;
+  return `${base}/order/tracking?track=${encodeURIComponent(order.tracking_token)}`;
 }
 
 export async function sendOrderConfirmation(order) {
