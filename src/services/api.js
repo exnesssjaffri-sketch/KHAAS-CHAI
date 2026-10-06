@@ -1,7 +1,14 @@
 // API Service Layer - Calls Express Backend
 import axios from 'axios';
+import { supabase } from '../lib/supabaseClient';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api/v1';
+const API_BASE_URL = import.meta.env.VITE_API_URL || '';
+const isProduction = import.meta.env.PROD;
+const requireBackend = () => {
+  if (isProduction && !API_BASE_URL) {
+    throw new Error('Order API is not configured for production.');
+  }
+};
 
 const api = axios.create({
   baseURL: API_BASE_URL,
@@ -94,8 +101,37 @@ export const cartApi = {
 
 // Orders API
 export const ordersApi = {
-  place: (data) => api.post('/orders', data).then(handleResponse),
-  track: (trackingToken) => api.get(`/orders/track/${encodeURIComponent(trackingToken)}`).then(handleResponse),
+  place: async (data) => {
+    if (!API_BASE_URL) {
+      const { data: rpcData, error } = await supabase.rpc('place_order', {
+        p_user_id: data.user_id || null,
+        p_items: data.items,
+        p_total_amount: data.total_amount,
+        p_shipping_address: data.shipping_address,
+        p_payment_method: data.payment_method,
+        p_special_notes: data.special_notes || null,
+        p_customer_name: data.customer_name || null,
+        p_customer_email: data.customer_email || null,
+        p_customer_phone: data.customer_phone || null,
+        p_subtotal: data.subtotal,
+        p_delivery_fee: data.delivery_fee || 0,
+        p_packaging_fee: data.packaging_fee || 0
+      });
+      if (error) throw new Error(error.message || 'Order could not be placed.');
+      return { success: true, message: 'Order placed successfully', data: { ...rpcData, order_id: rpcData?.id } };
+    }
+    return api.post('/orders', data).then(handleResponse);
+  },
+  track: async (trackingToken) => {
+    if (!API_BASE_URL) {
+      const { data: rpcData, error } = await supabase.rpc('track_order_by_token', {
+        p_tracking_token: trackingToken
+      });
+      if (error) throw new Error(error.message || 'Tracking could not be loaded.');
+      return { success: true, data: rpcData };
+    }
+    return api.get(`/orders/track/${encodeURIComponent(trackingToken)}`).then(handleResponse);
+  },
   getMyOrders: (params = {}) => api.get('/orders/my', { params }).then(handleResponse),
   get: (id) => api.get(`/orders/${id}`).then(handleResponse),
   cancel: (id) => api.patch(`/orders/${id}/cancel`).then(handleResponse),
