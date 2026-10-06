@@ -37,3 +37,9 @@
 }
 
 .tray-pop { animation: tray-pop 420ms ease-out both; }
+
+
+.deferred-section {
+  content-visibility: auto;
+  contain-intrinsic-size: 720px;
+}
