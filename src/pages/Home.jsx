@@ -1,6 +1,7 @@
 import { NavLink } from 'react-router-dom';
 import { SectionContainer, Divider, Card, Badge, IconBadge, Button, ImageWithFallback } from '../components/UI';
 import VideoBackground from '../components/VideoBackground';
+import { addToTray } from '../services/trayStorage';
 
 const householdRituals = [
   {
@@ -122,6 +123,20 @@ const signatureBrews = [
   },
 ];
 
+const HOME_PRODUCT_IDS = {
+  'Special Doodh Patti': '1ca12e54-b3fd-4a18-87c8-d45f841ef348',
+  'Kashmiri Chai': '50492b78-3d1a-433a-b404-a368cdbf2a96',
+  'Elaichi Chai': '4ae972cb-7a28-4fa0-87be-46e1700c7f1b',
+  'Koyla Chai': 'e91f9e72-48d6-4d36-9c5c-b6711c9c535c',
+  'Adrak Chai': 'fca070bf-f60e-4843-977d-a8e11d52ced4',
+  'Zafrani Chai': '5cde7839-af84-4bfb-9ea9-0d45240be2e1',
+  'Crisp Almond Nankhatai': '473c0787-bc14-4e7f-bfa9-dfea8f0e6b0a',
+  "Baker's Cake Rusk": 'afc84a56-55bd-4758-a124-e364e835209b',
+  'Crisp Samosa & Chutney': 'b206adbb-ae8a-40cb-af76-512c41320faa',
+  'Ajwaini Namak Paare': '5b453016-c822-4719-8057-fcc1eb6cd812',
+  'Shahi Tukray with Rabri': '943cfc6f-2679-40c2-aede-2143de00d8fb'
+};
+
 const lawaazmaat = [
   {
     name: 'Crisp Almond Nankhatai',
@@ -150,6 +165,26 @@ const lawaazmaat = [
 ];
 
 export default function Home() {
+  const [addedId, setAddedId] = useState(null);
+  const [trayMessage, setTrayMessage] = useState('');
+
+  const handleAddToTray = (key) => {
+    const productId = HOME_PRODUCT_IDS[key];
+    if (!productId) {
+      setTrayMessage('This item is not available for ordering yet.');
+      return;
+    }
+    const product = [...signatureBrews, ...lawaazmaat].find(item => item.name === key);
+    addToTray({ productId, name: key, price: Number(String(product?.price || '0').replace(/[^0-9.]/g, '')) || 0 });
+    setAddedId(productId);
+    setTrayMessage(`${key} added to your tray`);
+    window.clearTimeout(window.__khaasTrayToastTimer);
+    window.__khaasTrayToastTimer = window.setTimeout(() => {
+      setAddedId(null);
+      setTrayMessage('');
+    }, 1800);
+  };
+
   return (
     <main className="flex-1 flex flex-col relative w-full pb-28 bg-surface pt-24">
       <div className="flex flex-col w-full">
@@ -273,9 +308,9 @@ export default function Home() {
                     <span className="material-symbols-outlined text-[15px]" style={{ color: brew.detailColor }}>{brew.detailIcon}</span>
                     <span>{brew.detail}</span>
                   </div>
-                  <Button variant="primary" size="sm">
-                    <span className="material-symbols-outlined text-[15px]">add</span>
-                    <span>Add to Tray</span>
+                  <Button variant="primary" size="sm" onClick={() => handleAddToTray(brew.name)} className={`transition-all ${addedId === HOME_PRODUCT_IDS[brew.name] ? 'scale-105' : ''}`}>
+                    <span className="material-symbols-outlined text-[15px]">{addedId === HOME_PRODUCT_IDS[brew.name] ? 'check_circle' : 'add'}</span>
+                    <span>{addedId === HOME_PRODUCT_IDS[brew.name] ? 'Added' : 'Add to Tray'}</span>
                   </Button>
                 </div>
               </Card>
@@ -300,8 +335,8 @@ export default function Home() {
                 <span className="text-[12px] text-on-surface-variant">{item.description}</span>
                 <div className="flex items-center justify-between pt-1 mt-auto">
                   <span className="font-label-lg text-secondary font-bold text-[14px]">{item.price}</span>
-                  <Button variant="ghost" size="sm" className="w-7 h-7 p-0">
-                    <span className="material-symbols-outlined text-[16px]">add</span>
+                  <Button variant="ghost" size="sm" className={`w-7 h-7 p-0 transition-all ${addedId === HOME_PRODUCT_IDS[item.name] ? 'bg-primary-fixed scale-110' : ''}`} onClick={() => handleAddToTray(item.name)}>
+                    <span className="material-symbols-outlined text-[16px]">{addedId === HOME_PRODUCT_IDS[item.name] ? 'check' : 'add'}</span>
                   </Button>
                 </div>
               </Card>
@@ -360,6 +395,17 @@ export default function Home() {
           </div>
         </SectionContainer>
       </div>
+      {trayMessage && (
+        <div className="fixed inset-x-4 bottom-24 z-[60] flex justify-center pointer-events-none">
+          <div className="pointer-events-auto flex max-w-md items-center gap-3 rounded-full bg-primary px-4 py-3 text-sm font-semibold text-on-primary shadow-xl animate-[pulse_1.2s_ease-in-out_1]">
+            <span className="flex h-7 w-7 items-center justify-center rounded-full bg-primary-fixed text-on-primary-fixed">
+              <span className="material-symbols-outlined text-[18px]">check</span>
+            </span>
+            <span className="min-w-0 truncate">{trayMessage}</span>
+            <a href="/order" className="shrink-0 rounded-full bg-surface px-3 py-1.5 text-xs font-bold text-secondary">View Tray</a>
+          </div>
+        </div>
+      )}
     </main>
   );
 }
