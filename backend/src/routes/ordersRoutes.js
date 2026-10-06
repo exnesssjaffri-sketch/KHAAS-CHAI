@@ -14,6 +14,7 @@ import {
 const router = Router();
 
 // Customer routes
+router.post('/payment-webhook', ordersController.paymentWebhook);
 router.post('/', optionalAuth, validate(orderCreateSchema), ordersController.placeOrder);
 router.get('/track/:token', ordersController.trackOrder);
 router.use(authenticate);
