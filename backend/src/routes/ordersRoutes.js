@@ -15,6 +15,7 @@ const router = Router();
 
 // Customer routes
 router.post('/', optionalAuth, validate(orderCreateSchema), ordersController.placeOrder);
+router.get('/track/:token', ordersController.trackOrder);
 router.use(authenticate);
 router.get('/my', validate(orderQuerySchema), ordersController.getMyOrders);
 router.get('/:id', validate(orderParamsSchema), ordersController.getOrder);
