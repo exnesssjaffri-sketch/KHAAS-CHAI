@@ -1,6 +1,7 @@
 // Orders Controller
 import { supabaseService } from '../services/supabaseService.js';
 import { supabaseAdmin } from '../config/supabase.js';
+import { sendOrderConfirmation, sendOrderStatusUpdate, sendPaymentSuccess } from '../services/emailService.js';
 
 // Configurable delivery fee rules (server-side, never trust client)
 const DELIVERY_FEE = parseFloat(process.env.DELIVERY_FEE) || 120;
@@ -100,6 +101,9 @@ export const ordersController = {
         customer_phone: orderData.customer_phone || orderData.shipping_address?.phone || null
       });
 
+      // Email automation must never make a successful order fail.
+      try { await sendOrderConfirmation(result); } catch (emailError) { console.error('[order-email] confirmation failed:', emailError.message); }
+
       res.status(201).json({
         success: true,
         message: 'Order placed successfully',
@@ -117,6 +121,19 @@ export const ordersController = {
     } catch (err) {
       next(err);
     }
+  },
+
+  async trackOrder(req, res, next) {
+    try {
+      const { token } = req.params;
+      const { data, error } = await supabaseAdmin
+        .from('orders')
+        .select('id, items, total_amount, shipping_address, payment_method, payment_status, order_status, customer_name, created_at, updated_at, tracking_token')
+        .eq('tracking_token', token)
+        .single();
+      if (error || !data) return res.status(404).json({ success: false, message: 'Tracking link is invalid or expired' });
+      res.json({ success: true, message: 'Order tracking loaded', data });
+    } catch (err) { next(err); }
   },
 
   async getMyOrders(req, res, next) {
@@ -194,13 +211,22 @@ export const ordersController = {
   async updateOrderStatus(req, res, next) {
     try {
       const { id } = req.params;
-      const data = await supabaseService.updateOrderStatus(id, req.body);
-      
-      res.json({
-        success: true,
-        message: 'Order status updated',
-        data
-      });
+      const { data: previous, error: previousError } = await supabaseAdmin
+        .from('orders').select('*').eq('id', id).single();
+      if (previousError || !previous) return res.status(404).json({ success: false, message: 'Order not found' });
+
+      const { data, error } = await supabaseAdmin
+        .from('orders').update(req.body).eq('id', id).select('*').single();
+      if (error) throw error;
+
+      try {
+        await sendOrderStatusUpdate(data, previous.order_status);
+        if (previous.payment_status !== 'paid' && data.payment_status === 'paid') {
+          await sendPaymentSuccess(data);
+        }
+      } catch (emailError) { console.error('[order-email] status/payment email failed:', emailError.message); }
+
+      res.json({ success: true, message: 'Order status updated', data });
     } catch (err) {
       if (err.code === 'PGRST116') {
         return res.status(404).json({
