@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 
 export default function VideoBackground({
   desktopSrc,
@@ -12,6 +12,7 @@ export default function VideoBackground({
   const [useFallback, setUseFallback] = useState(true);
   const [videoSrc, setVideoSrc] = useState('');
   const [videoLoaded, setVideoLoaded] = useState(false);
+  const videoRef = useRef(null);
 
   useEffect(() => {
     const checkMobile = () => {
@@ -50,7 +51,13 @@ export default function VideoBackground({
     }
   }, [isMobile, prefersReducedMotion, desktopSrc, mobileSrc]);
 
-  const handleVideoLoad = () => setVideoLoaded(true);
+  const handleVideoLoad = () => {
+    setVideoLoaded(true);
+    videoRef.current?.play().catch(() => {
+      setUseFallback(true);
+      setVideoSrc('');
+    });
+  };
   const handleVideoError = () => {
     setUseFallback(true);
     setVideoSrc('');
@@ -73,12 +80,13 @@ export default function VideoBackground({
   return (
     <div className={`relative w-full h-full overflow-hidden ${className}`} aria-hidden="true">
       <video
+        ref={videoRef}
         src={videoSrc}
         autoPlay
         muted
         playsInline
         loop
-        preload={isMobile ? 'metadata' : 'auto'}
+        preload="metadata"
         onLoadedData={handleVideoLoad}
         onError={handleVideoError}
         className={`w-full h-full object-cover transition-opacity duration-500 ${
