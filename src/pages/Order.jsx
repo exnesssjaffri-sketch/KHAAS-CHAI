@@ -53,7 +53,27 @@ export default function Order() {
     if(fulfillment==='delivery'&&!address.trim())return setError('Please enter your delivery address.');
     setPlacing(true);
     try{
-      const result=await ordersApi.place({items:items.map(i=>({product_id:i.id,quantity:i.quantity})),shipping_address:{name:name.trim(),phone:phone.trim(),street:address.trim()||'Pickup',city:'Lahore',landmark:landmark.trim()||undefined},payment_method:payment,special_notes:notes.trim()||undefined,customer_name:name.trim(),customer_email:email.trim(),customer_phone:phone.trim(),fulfillment});
+      const result=await ordersApi.place({
+        user_id:null,
+        items:items.map(i=>({product_id:i.id,quantity:i.quantity})),
+        total_amount:totals.total,
+        subtotal:totals.subtotal,
+        delivery_fee:totals.delivery,
+        packaging_fee:totals.packaging,
+        shipping_address:{
+          name:name.trim(),
+          phone:phone.trim(),
+          street:fulfillment==='delivery' ? address.trim() : 'Pickup',
+          city:'Lahore',
+          landmark:landmark.trim()||undefined,
+          fulfillment
+        },
+        payment_method:payment,
+        special_notes:notes.trim()||undefined,
+        customer_name:name.trim(),
+        customer_email:email.trim(),
+        customer_phone:phone.trim()
+      });
       const order=result.data;setSuccess({id:order.id,token:order.tracking_token,total:result.data.breakdown?.total??order.total_amount});clearTray();setCart({});setNotes('');
     }catch(e){setError(e?.response?.data?.message||e?.message||'Order could not be placed.')}finally{setPlacing(false)}
   };
