@@ -1,5 +1,6 @@
 import { NavLink, useLocation } from 'react-router-dom';
 import { useState, useEffect } from 'react';
+import { getTray, onTrayChange } from '../services/trayStorage';
 
 const navItems = [
   { path: '/', label: 'Home', icon: 'home' },
@@ -12,6 +13,22 @@ const navItems = [
 export default function Navbar() {
   const location = useLocation();
   const [scrolled, setScrolled] = useState(false);
+  const [trayCount, setTrayCount] = useState(0);
+  const [trayBounce, setTrayBounce] = useState(false);
+
+  useEffect(() => {
+    const syncTray = (tray) => {
+      const count = Object.values(tray).reduce((sum, item) => sum + Number(item.quantity || 0), 0);
+      setTrayCount(count);
+    };
+    syncTray(getTray());
+    return onTrayChange((tray) => {
+      syncTray(tray);
+      setTrayBounce(true);
+      window.clearTimeout(window.__navbarTrayBounce);
+      window.__navbarTrayBounce = window.setTimeout(() => setTrayBounce(false), 500);
+    });
+  }, []);
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 10);
@@ -41,9 +58,9 @@ export default function Navbar() {
             <span className="material-symbols-outlined text-[15px]">bolt</span>
             <span>Order Now</span>
           </NavLink>
-          <button aria-label="Cart and Teacup Orders" className="relative w-9 h-9 flex items-center justify-center rounded-full bg-surface-container-low text-secondary hover:bg-surface-container transition-colors shadow-xs">
+          <button onClick={() => window.location.assign('/order')} aria-label="Open your tray" className={`relative flex h-9 w-9 items-center justify-center rounded-full bg-surface-container-low text-secondary transition-all hover:bg-surface-container shadow-xs ${trayBounce ? 'scale-110' : ''}`}>
             <span className="material-symbols-outlined text-[20px]">shopping_bag</span>
-            <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-secondary text-[9px] font-label-sm text-on-secondary font-semibold">2</span>
+            {trayCount > 0 && <span className="absolute -top-1 -right-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-secondary px-1 text-[9px] font-label-sm text-on-secondary font-semibold">{trayCount}</span>}
           </button>
         </div>
       </div>
