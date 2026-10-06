@@ -95,6 +95,7 @@ export const cartApi = {
 // Orders API
 export const ordersApi = {
   place: (data) => api.post('/orders', data).then(handleResponse),
+  track: (trackingToken) => api.get(`/orders/track/${encodeURIComponent(trackingToken)}`).then(handleResponse),
   getMyOrders: (params = {}) => api.get('/orders/my', { params }).then(handleResponse),
   get: (id) => api.get(`/orders/${id}`).then(handleResponse),
   cancel: (id) => api.patch(`/orders/${id}/cancel`).then(handleResponse),
