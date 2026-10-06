@@ -8,6 +8,7 @@ import About from './pages/About';
 import Gallery from './pages/Gallery';
 import Blog from './pages/Blog';
 import Order from './pages/Order';
+import OrderTracking from './pages/OrderTracking';
 import AdminDashboard from './pages/AdminDashboard';
 import InventoryDashboard from './pages/InventoryDashboard';
 
@@ -58,6 +59,7 @@ function AppRoutes() {
         <Route path="gallery" element={<Gallery />} />
         <Route path="blog" element={<Blog />} />
         <Route path="order" element={<Order />} />
+        <Route path="order/tracking" element={<OrderTracking />} />
         <Route 
           path="admin" 
           element={
